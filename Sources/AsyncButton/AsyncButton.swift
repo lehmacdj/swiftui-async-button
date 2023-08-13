@@ -13,8 +13,8 @@ public struct AsyncButton<Label> : View where Label : View {
     
     private let generator = UINotificationFeedbackGenerator()
     
-    @State private var tint: Color?
-    
+    @State private var tintOverride: Color?
+
     var operationIsLoading: Bool {
         operations.contains { operation in
             if case .loading = operation {
@@ -69,13 +69,13 @@ public struct AsyncButton<Label> : View where Label : View {
                         withAnimation(.linear(duration: 0.1)) {
                             switch result {
                             case .success:
-                                tint = .green
+                                tintOverride = .green
                             case .failure:
-                                tint = .red
+                                tintOverride = .red
                             }
                         }
                         withAnimation(.linear(duration: 0.2).delay(1.5)) {
-                            tint = nil
+                            tintOverride = nil
                         }
                     }
                     if options.contains(.showAlertOnError) {
@@ -99,7 +99,7 @@ public struct AsyncButton<Label> : View where Label : View {
         )
         .disabled(disableButton)
         .animation(transaction.animation, value: operations)
-        .tint(tint)
+        .tintIfNonNil(tintOverride)
         .alert(isPresented: $showingErrorAlert, error: localizedError) { error in
             Button("OK") {
                 showingErrorAlert = false
@@ -169,6 +169,17 @@ extension AsyncButton where Label == Text {
     {
         self.init(role: role, options: options, transaction: transaction, action: action) { operations in
             Text(title)
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func tintIfNonNil(_ tint: Color?) -> some View {
+        if let tint {
+            self.tint(tint)
+        } else {
+            self
         }
     }
 }
